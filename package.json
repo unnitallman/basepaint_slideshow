@@ -1,0 +1,15 @@
+{
+  "name": "basepaint-slideshow",
+  "version": "1.0.0",
+  "description": "Slideshow from Basepaint app",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve"
+  },
+  "author": "Unnikrishnan KP",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "serve": "^14.0.1"
+  }
+}
