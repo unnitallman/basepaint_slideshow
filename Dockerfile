@@ -1,32 +1,28 @@
-FROM ghcr.io/railwayapp/nixpacks:ubuntu-1711411379
+FROM docker.io/library/node:18.12.1
 
-ENTRYPOINT ["/bin/bash", "-l", "-c"]
-WORKDIR /app/
+# Source Code lives here
+WORKDIR /workspace/repo
 
+# Install base packages
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-COPY .nixpacks/nixpkgs-bf744fe90419885eefced41b3e5ae442d732712d.nix .nixpacks/nixpkgs-bf744fe90419885eefced41b3e5ae442d732712d.nix
-RUN nix-env -if .nixpacks/nixpkgs-bf744fe90419885eefced41b3e5ae442d732712d.nix && nix-collect-garbage -d
+# Set production environment
+ENV RAILS_ENV="production" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="development"
 
+# Install packages needed to build gems
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git pkg-config && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-ARG CI NIXPACKS_METADATA NODE_ENV NPM_CONFIG_PRODUCTION
-ENV CI=$CI NIXPACKS_METADATA=$NIXPACKS_METADATA NODE_ENV=$NODE_ENV NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION
+# Copy application code
+COPY . .
+RUN npm install 
 
-# setup phase
-# noop
-
-# install phase
-ENV NIXPACKS_PATH /app/node_modules/.bin:$NIXPACKS_PATH
-COPY . /app/.
-RUN --mount=type=cache,id=e7WaEUfAsKI-/root/npm,target=/root/.npm npm ci
-
-# build phase
-# noop
-
-
-RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
-
-
-# start
-COPY . /app
+# Start the server by default, this can be overwritten at runtime
+EXPOSE 3000
 CMD ["npx serve ."]
-
