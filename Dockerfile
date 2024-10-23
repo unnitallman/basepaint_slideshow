@@ -1,28 +1,20 @@
-FROM docker.io/library/node:18.12.1
+# Use an official Node.js runtime as a parent image
+FROM node:18-alpine
 
-# Source Code lives here
-WORKDIR /workspace/repo
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
-# Install base packages
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+# Copy package.json and package-lock.json first to leverage Docker's layer caching
+COPY package*.json ./
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+# Install dependencies (this includes 'serve' from package.json)
+RUN npm install
 
-# Install packages needed to build gems
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git pkg-config && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy application code
+# Copy the rest of your application code
 COPY . .
-RUN npm install 
 
-# Start the server by default, this can be overwritten at runtime
+# Expose port 3000 (default for serve)
 EXPOSE 3000
-CMD ["npx serve ."]
+
+# Run 'serve' using npx, serving the static files on port 3000
+CMD ["npx", "serve", "-s", ".", "-l", "3000"]
