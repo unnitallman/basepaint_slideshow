@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Run 'serve' using npx, serving the static files on port 3000
-CMD ["npx", "serve", "-s", ".", "-l", "3000"]
+CMD npx serve . -l 3000
